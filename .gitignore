@@ -1,0 +1,43 @@
+# Python-related
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+db.sqlite3
+
+# Virtual environments
+venv/
+env/
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django-related
+*.log
+local_settings.py
+media/
+staticfiles/
+static/
+*.env
+
+# Docker-related
+*.pid
+*.tar
+build/
+dist/
+*.dockerenv
+.dockerignore
+
+# PostgreSQL data (important: prevents storing database dumps)
+volumes/
+postgres_data/
+
+# VS Code & JetBrains (IDE-specific)
+.vscode/
+.idea/
+*.iml
+
+# macOS & Linux system files
+.DS_Store
+*.swp
