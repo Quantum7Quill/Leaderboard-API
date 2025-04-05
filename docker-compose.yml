@@ -12,6 +12,19 @@ services:
     environment:
       DATABASE_HOST: db
 
+  celery:
+    build: .
+    command: celery -A app worker --loglevel=info
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+
+  redis:
+    image: redis:7-alpine
+
   db:
     image: postgres:14
     container_name: leaderboard_db
