@@ -11,16 +11,21 @@ services:
       - db
     environment:
       DATABASE_HOST: db
+      NEW_RELIC_CONFIG_FILE : /app/newrelic.ini
+      NEW_RELIC_ENVIRONMENT : production
 
   celery:
+
     build: .
-    command: celery -A app worker --loglevel=info
+    command: newrelic-admin run-program celery -A app worker --loglevel=info
     volumes:
       - .:/code
     depends_on:
       - redis
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - NEW_RELIC_CONFIG_FILE=/app/newrelic.ini
+      - NEW_RELIC_ENVIRONMENT=production
 
   redis:
     image: redis:7-alpine

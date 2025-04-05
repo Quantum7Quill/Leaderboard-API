@@ -41,3 +41,6 @@ postgres_data/
 # macOS & Linux system files
 .DS_Store
 *.swp
+
+# ignore newrelic config
+newrelic.ini
