@@ -21,15 +21,24 @@ class LeaderBoardService:
             update_leaderboard_task.delay(user_id)
 
     def get_rank(self, user_id):
+        user = User.objects.get(id=user_id)
         user_on_leaderboard =  Leaderboard.objects.filter(
             user_id=user_id,
             is_deleted=False,
         ).first()
     
         if user_on_leaderboard:
-            return user_on_leaderboard.rank
+            return {
+                'rank': user_on_leaderboard.rank,
+                'username': user.username,
+                'score': user_on_leaderboard.score,
+            }
         else:
-            return None
+            return {
+                'rank': None,
+                'username': user.username,
+                'score': None,
+            }
 
     def get_leaderboard(self, limit=10):
         leaderboard_entries = Leaderboard.objects.filter(

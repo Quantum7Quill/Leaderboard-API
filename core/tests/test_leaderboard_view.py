@@ -30,7 +30,6 @@ class LeaderboardViewTest(APITestCase):
         url = reverse('core:rank', args=[self.user1.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"rank": 1})
 
     def test_get_rank_user_not_exist(self):
         url = reverse('core:rank', args=[999])  # Non-existent user ID

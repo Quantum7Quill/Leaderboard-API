@@ -5,3 +5,4 @@ celery
 redis
 newrelic
 coverage
+django-cors-headers

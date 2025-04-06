@@ -1,9 +1,10 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from core.services.leaderboard_service import LeaderBoardService
 from core.models.leaderboard import Leaderboard
 from core.models.game_session import GameSession
 from core.models.user import User
 
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 class LeaderBoardServiceTest(TestCase):
     def setUp(self):
         # Create a test user
@@ -35,7 +36,8 @@ class LeaderBoardServiceTest(TestCase):
         self.service.submit_score(self.user.id, 100)
 
         # Get the rank of the user
-        rank = self.service.get_rank(self.user.id)
+        rank_details = self.service.get_rank(self.user.id)
+        rank = rank_details.get('rank')
         self.assertEqual(rank, 1)
 
     def test_get_leaderboard(self):

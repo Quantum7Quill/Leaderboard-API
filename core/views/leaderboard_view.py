@@ -49,12 +49,12 @@ class RankView(APIView):
                 return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
 
             leaderboard_service = LeaderBoardService()
-            rank = leaderboard_service.get_rank(user_id)
+            rank_details = leaderboard_service.get_rank(user_id)
 
-            if rank is None:
+            if rank_details.get('rank') is None:
                 return Response({"error": "Play Some Games to make mark on leaderboard"}, status=status.HTTP_404_NOT_FOUND)
 
-            return Response({"rank": rank}, status=status.HTTP_200_OK)
+            return Response(rank_details, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
