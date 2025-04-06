@@ -1,16 +1,16 @@
-from django_ratelimit.decorators import ratelimit
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from core.models.user import User
 from core.serializers.dashboard_serializer import ScoreSerializer
 from core.services.leaderboard_service import LeaderBoardService
 
 class ScoreView(APIView):
 
-    @ratelimit(key='ip', rate='100/m', block=True)
+    throttle_classes = [UserRateThrottle, AnonRateThrottle]
     def post(self, request):
         """
             API endpoint for submitting scores.
@@ -36,7 +36,8 @@ class ScoreView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class RankView(APIView):
-    @ratelimit(key='ip', rate='100/m', block=True)
+
+    throttle_classes = [UserRateThrottle, AnonRateThrottle]
     def get(self, request, user_id):
         """
             API endpoint for getting rank of a user.
@@ -59,7 +60,7 @@ class RankView(APIView):
 
 class LeaderboardView(APIView):
 
-    @ratelimit(key='ip', rate='100/m', block=True)
+    throttle_classes = [UserRateThrottle, AnonRateThrottle]
 
     def get(self, request):
         """
