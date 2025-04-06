@@ -1,53 +1,65 @@
 from celery import shared_task
 from core.models.game_session import GameSession
 from core.models.leaderboard import Leaderboard
-from django.db import transaction, models
-from datetime import datetime
+from django.db import transaction
+from django.db.models import Sum
+
+BATCH_SIZE = 1000
 
 @shared_task
-def update_leaderboard_task():
+def update_leaderboard_task(user_id):
+    """
+        Updates leaderboard for all the users whose rank can be affected in batch of 1000.
+        Optimization: This can be optimized further by only updating ranking of first 1000 affected users, instead of all users. This will
+        improves runtime of the task but ranks will be eventually consistent.
+    """
     with transaction.atomic():
-        aggregated_scores = (
+        total_score = (
             GameSession.objects
-            .values('user_id')
-            .annotate(total_score=models.Sum('score'))
-            .order_by('-total_score')
+            .filter(user_id=user_id)
+            .aggregate(score=Sum('score'))['score'] or 0
         )
 
-        user_score_rank_map = {
-            entry['user_id']: {'score': entry['total_score'], 'rank': rank}
-            for rank, entry in enumerate(aggregated_scores, start=1)
-        }
+        user_entry, _ = Leaderboard.objects.get_or_create(
+            user_id=user_id,
+            defaults={'score': total_score, 'rank': 0, 'is_deleted': False}
+        )
+        old_score = user_entry.score
+        user_entry.score = total_score
+        user_entry.is_deleted = False
+        user_entry.deleted_at = None
+        user_entry.save()
 
-        existing_entries = list(Leaderboard.objects.select_for_update().filter(is_deleted=False))
-        existing_user_ids = {entry.user_id for entry in existing_entries}
+        # Manual pagination over affected leaderboard entries
+        current_rank = 1
+        last_score = None
+        actual_rank = 1
+        batch_index = 0
 
-        # Update existing entries
-        for entry in existing_entries:
-            update = user_score_rank_map.get(entry.user_id)
-            if update:
-                entry.score = update['score']
-                entry.rank = update['rank']
-            else:
-                entry.is_deleted = True
-                entry.deleted_at = datetime.now()
-
-        # Create new leaderboard entries
-        new_entries = []
-        for user_id, data in user_score_rank_map.items():
-            if user_id not in existing_user_ids:
-                new_entries.append(
-                    Leaderboard(
-                        user_id=user_id,
-                        score=data['score'],
-                        rank=data['rank']
-                    )
+        while True:
+            batch_qs = (
+                Leaderboard.objects
+                .filter(
+                    is_deleted=False,
+                    score__gte=old_score
                 )
+                .order_by('-score', 'user_id')
+                .select_for_update(skip_locked=True)[batch_index * BATCH_SIZE:(batch_index + 1) * BATCH_SIZE]
+            )
 
-        if new_entries:
-            Leaderboard.objects.bulk_create(new_entries)
+            batch = list(batch_qs)
+            if not batch:
+                break
 
-        Leaderboard.objects.bulk_update(
-            existing_entries,
-            ['score', 'rank', 'is_deleted', 'deleted_at']
-        )
+            if batch_index == 1:
+                break
+
+            for entry in batch:
+                if last_score is None or entry.score != last_score:
+                    current_rank = actual_rank
+                    last_score = entry.score
+                entry.rank = current_rank
+                actual_rank += 1
+
+            Leaderboard.objects.bulk_update(batch, ['rank'])
+            batch_index += 1

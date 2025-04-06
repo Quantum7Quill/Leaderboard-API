@@ -18,7 +18,7 @@ class LeaderBoardService:
             )
 
             # Trigger leaderboard update as a background task
-            update_leaderboard_task.delay()
+            update_leaderboard_task.delay(user_id)
 
     def get_rank(self, user_id):
         user_on_leaderboard =  Leaderboard.objects.filter(

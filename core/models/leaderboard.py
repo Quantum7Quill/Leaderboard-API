@@ -12,5 +12,5 @@ class Leaderboard(BaseModel):
         related_name="leaderboards"
     )
 
-    score = models.IntegerField()
-    rank = models.PositiveBigIntegerField()
+    score = models.IntegerField(db_index=True)
+    rank = models.PositiveBigIntegerField(db_index=True)
