@@ -97,8 +97,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'user': '100/min',  # Ensure this matches the scope used in your views
-        'anon': '10/min',   # Example for anonymous users
-        'ip': '500/min'
+        'anon': '100/min',   # Example for anonymous users
+        'ip': '100/min'
     }
 }
 
