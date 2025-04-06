@@ -1,3 +1,4 @@
+from django_ratelimit.decorators import ratelimit
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,7 +9,8 @@ from core.serializers.dashboard_serializer import ScoreSerializer
 from core.services.leaderboard_service import LeaderBoardService
 
 class ScoreView(APIView):
-    
+
+    @ratelimit(key='ip', rate='100/m', block=True)
     def post(self, request):
         """
             API endpoint for submitting scores.
@@ -19,7 +21,7 @@ class ScoreView(APIView):
             serializer.is_valid(raise_exception=True)
             score = serializer.validated_data['score']
             user_id = serializer.validated_data['user_id']
-            
+
             # Logic to submit score to leaderboard service
             leaderboard_service = LeaderBoardService()
             leaderboard_service.submit_score(
@@ -32,8 +34,9 @@ class ScoreView(APIView):
             return Response({"error": e.args[0]}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 class RankView(APIView):
+    @ratelimit(key='ip', rate='100/m', block=True)
     def get(self, request, user_id):
         """
             API endpoint for getting rank of a user.
@@ -53,8 +56,10 @@ class RankView(APIView):
             return Response({"rank": rank}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 class LeaderboardView(APIView):
+
+    @ratelimit(key='ip', rate='100/m', block=True)
 
     def get(self, request):
         """
