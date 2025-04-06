@@ -22,7 +22,7 @@ def update_leaderboard_task(user_id):
 
         user_entry, _ = Leaderboard.objects.get_or_create(
             user_id=user_id,
-            defaults={'score': total_score, 'rank': 0, 'is_deleted': False}
+            defaults={'score': 0, 'rank': 0, 'is_deleted': False}
         )
         old_score = user_entry.score
         user_entry.score = total_score
@@ -49,9 +49,6 @@ def update_leaderboard_task(user_id):
 
             batch = list(batch_qs)
             if not batch:
-                break
-
-            if batch_index == 1:
                 break
 
             for entry in batch:
